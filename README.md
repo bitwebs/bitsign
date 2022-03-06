@@ -1,18 +1,18 @@
-# @hyperswarm/hypersign
+# @web4/bitsign
 
 Utility methods related to public key cryptography to be used with distributed mutable storage.
 
 ```
-npm install @hyperswarm/hypersign
+npm install @web4/bitsign
 ```
 
 ## API
 
-#### `const { keypair, salt, sign, signable } = hypersign()`
+#### `const { keypair, salt, sign, signable } = bitsign()`
 
-Call the exported function to get hypersign instance.
+Call the exported function to get bitsign instance.
 
-There is also a class `hypersign.HyperSign` which can be
+There is also a class `bitsign.Bitsign` which can be
 extended.
 
 #### `keypair()`

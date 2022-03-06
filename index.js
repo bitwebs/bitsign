@@ -18,7 +18,7 @@ const saltSeg = Buffer.from('4:salt')
 const seqSeg = Buffer.from('3:seqi')
 const vSeg = Buffer.from('1:v')
 
-class Hypersign {
+class Bitsign {
   salt (str = null, size = 32) {
     if (typeof str === 'number') {
       size = str
