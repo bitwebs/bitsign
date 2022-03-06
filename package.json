@@ -1,5 +1,5 @@
 {
-  "name": "@web4/bitsigb",
+  "name": "@web4/bitsign",
   "version": "1.0.0",
   "description": "Utility methods related to public key cryptography to be used with distributed mutable storage",
   "main": "index.js",
