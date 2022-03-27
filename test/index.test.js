@@ -4,10 +4,10 @@ const {
   crypto_sign_verify_detached: verify,
   crypto_generichash: hash
 } = require('sodium-universal')
-const hypersign = require('../')()
+const bitsign = require('../')()
 const bencode = require('bencode')
 test('keypair', async ({ is }) => {
-  const { publicKey, secretKey } = hypersign.keypair()
+  const { publicKey, secretKey } = bitsign.keypair()
   is(publicKey instanceof Buffer, true)
   is(publicKey.length, 32)
   is(secretKey instanceof Buffer, true)
@@ -15,47 +15,47 @@ test('keypair', async ({ is }) => {
 })
 
 test('salt', async ({ is, throws }) => {
-  const salt = hypersign.salt()
+  const salt = bitsign.salt()
   is(salt instanceof Buffer, true)
   is(salt.length, 32)
-  is(hypersign.salt(64).length, 64)
-  throws(() => hypersign.salt(15))
-  throws(() => hypersign.salt(65))
+  is(bitsign.salt(64).length, 64)
+  throws(() => bitsign.salt(15))
+  throws(() => bitsign.salt(65))
 })
 
 test('salt string', async ({ is, throws }) => {
-  const salt = hypersign.salt('test')
+  const salt = bitsign.salt('test')
   is(salt instanceof Buffer, true)
   is(salt.length, 32)
-  is(hypersign.salt(64).length, 64)
+  is(bitsign.salt(64).length, 64)
   const check = Buffer.alloc(32)
   hash(check, Buffer.from('test'))
   is(salt.equals(check), true)
-  throws(() => hypersign.salt('test', 15))
-  throws(() => hypersign.salt('test', 65))
+  throws(() => bitsign.salt('test', 15))
+  throws(() => bitsign.salt('test', 65))
 })
 
 test('signable', async ({ is, same }) => {
-  const salt = hypersign.salt()
+  const salt = bitsign.salt()
   const value = Buffer.from('test')
   same(
-    hypersign.signable(value),
+    bitsign.signable(value),
     bencode.encode({ seq: 0, v: value }).slice(1, -1)
   )
   same(
-    hypersign.signable(value, { seq: 1 }),
+    bitsign.signable(value, { seq: 1 }),
     bencode.encode({ seq: 1, v: value }).slice(1, -1)
   )
   same(
-    hypersign.signable(value, { salt }),
+    bitsign.signable(value, { salt }),
     bencode.encode({ salt, seq: 0, v: value }).slice(1, -1)
   )
 })
 
 test('signable - decodable with bencode', async ({ is, same }) => {
-  const salt = hypersign.salt()
+  const salt = bitsign.salt()
   const value = Buffer.from('test')
-  const msg = hypersign.signable(value, { salt })
+  const msg = bitsign.signable(value, { salt })
   const result = bencode.decode(
     Buffer.concat([Buffer.from('d'), msg, Buffer.from('e')])
   )
@@ -67,54 +67,54 @@ test('signable - decodable with bencode', async ({ is, same }) => {
 })
 
 test('signable - salt must be a buffer', async ({ throws }) => {
-  throws(() => hypersign.signable(Buffer.from('test'), { salt: 'no' }), 'salt must be a buffer')
+  throws(() => bitsign.signable(Buffer.from('test'), { salt: 'no' }), 'salt must be a buffer')
 })
 
 test('signable - salt size must be no greater than 64 bytes', async ({ throws }) => {
   throws(
-    () => hypersign.signable(Buffer.from('test'), { salt: Buffer.alloc(65) }),
+    () => bitsign.signable(Buffer.from('test'), { salt: Buffer.alloc(65) }),
     'salt size must be no greater than 64 bytes'
   )
 })
 
 test('signable - value must be buffer', async ({ throws }) => {
-  const keypair = hypersign.keypair()
-  throws(() => hypersign.signable('test', { keypair }), 'Value must be a buffer')
+  const keypair = bitsign.keypair()
+  throws(() => bitsign.signable('test', { keypair }), 'Value must be a buffer')
 })
 
 test('signable - value size must be <= 1000 bytes', async ({ throws }) => {
-  const keypair = hypersign.keypair()
+  const keypair = bitsign.keypair()
   throws(
-    () => hypersign.signable(Buffer.alloc(1001), { keypair }),
+    () => bitsign.signable(Buffer.alloc(1001), { keypair }),
     'Value size must be <= 1000'
   )
 })
 
 test('sign', async ({ is }) => {
-  const keypair = hypersign.keypair()
+  const keypair = bitsign.keypair()
   const { publicKey } = keypair
-  const salt = hypersign.salt()
+  const salt = bitsign.salt()
   const value = Buffer.from('test')
   is(
     verify(
-      hypersign.sign(value, { keypair }),
-      hypersign.signable(value),
+      bitsign.sign(value, { keypair }),
+      bitsign.signable(value),
       publicKey
     ),
     true
   )
   is(
     verify(
-      hypersign.sign(value, { salt, keypair }),
-      hypersign.signable(value, { salt }),
+      bitsign.sign(value, { salt, keypair }),
+      bitsign.signable(value, { salt }),
       publicKey
     ),
     true
   )
   is(
     verify(
-      hypersign.sign(value, { seq: 2, keypair }),
-      hypersign.signable(value, { seq: 2 }),
+      bitsign.sign(value, { seq: 2, keypair }),
+      bitsign.signable(value, { seq: 2 }),
       publicKey
     ),
     true
@@ -122,106 +122,106 @@ test('sign', async ({ is }) => {
 })
 
 test('sign - salt must be a buffer', async ({ throws }) => {
-  throws(() => hypersign.sign(Buffer.from('test'), { salt: 'no' }), 'salt must be a buffer')
+  throws(() => bitsign.sign(Buffer.from('test'), { salt: 'no' }), 'salt must be a buffer')
 })
 
 test('sign - salt size must be >= 16 bytes and <= 64 bytes', async ({ throws }) => {
   throws(
-    () => hypersign.sign(Buffer.from('test'), { salt: Buffer.alloc(15) }),
+    () => bitsign.sign(Buffer.from('test'), { salt: Buffer.alloc(15) }),
     'salt size must be between 16 and 64 bytes (inclusive)'
   )
   throws(
-    () => hypersign.sign(Buffer.from('test'), { salt: Buffer.alloc(65) }),
+    () => bitsign.sign(Buffer.from('test'), { salt: Buffer.alloc(65) }),
     'salt size must be between 16 and 64 bytes (inclusive)'
   )
 })
 
 test('sign - value must be buffer', async ({ throws }) => {
-  const keypair = hypersign.keypair()
-  throws(() => hypersign.sign('test', { keypair }), 'Value must be a buffer')
+  const keypair = bitsign.keypair()
+  throws(() => bitsign.sign('test', { keypair }), 'Value must be a buffer')
 })
 
 test('sign - options are required', async ({ throws }) => {
-  throws(() => hypersign.sign('test'), 'Options are required')
+  throws(() => bitsign.sign('test'), 'Options are required')
 })
 
 test('sign - value size must be <= 1000 bytes', async ({ throws }) => {
-  const keypair = hypersign.keypair()
+  const keypair = bitsign.keypair()
   throws(
-    () => hypersign.sign(Buffer.alloc(1001), { keypair }),
+    () => bitsign.sign(Buffer.alloc(1001), { keypair }),
     'Value size must be <= 1000'
   )
 })
 
 test('sign - keypair option is required', async ({ throws }) => {
   throws(
-    () => hypersign.sign(Buffer.alloc(1001), {}),
+    () => bitsign.sign(Buffer.alloc(1001), {}),
     'keypair is required'
   )
 })
 
 test('sign - keypair must have secretKey which must be a buffer', async ({ throws }) => {
-  const keypair = hypersign.keypair()
+  const keypair = bitsign.keypair()
   keypair.secretKey = 'nope'
   throws(
-    () => hypersign.sign(Buffer.alloc(1001), { keypair }),
+    () => bitsign.sign(Buffer.alloc(1001), { keypair }),
     'keypair.secretKey is required'
   )
   delete keypair.secretKey
   throws(
-    () => hypersign.sign(Buffer.alloc(1001), { keypair }),
+    () => bitsign.sign(Buffer.alloc(1001), { keypair }),
     'keypair.secretKey is required'
   )
 })
 
 test('cryptoSign - msg must be buffer', async ({ throws }) => {
-  const keypair = hypersign.keypair()
-  throws(() => hypersign.cryptoSign('test', keypair), 'msg must be a buffer')
+  const keypair = bitsign.keypair()
+  throws(() => bitsign.cryptoSign('test', keypair), 'msg must be a buffer')
 })
 
 test('cryptoSign - keypair is required', async ({ throws }) => {
-  throws(() => hypersign.cryptoSign('test'), 'keypair is required')
+  throws(() => bitsign.cryptoSign('test'), 'keypair is required')
 })
 
 test('cryptoSign - keypair must have secretKey which must be a buffer', async ({ throws }) => {
-  const keypair = hypersign.keypair()
+  const keypair = bitsign.keypair()
   keypair.secretKey = 'nope'
   throws(
-    () => hypersign.cryptoSign(Buffer.alloc(1001), { keypair }),
+    () => bitsign.cryptoSign(Buffer.alloc(1001), { keypair }),
     'keypair.secretKey is required'
   )
   delete keypair.secretKey
   throws(
-    () => hypersign.cryptoSign(Buffer.alloc(1001), { keypair }),
+    () => bitsign.cryptoSign(Buffer.alloc(1001), { keypair }),
     'keypair.secretKey is required'
   )
 })
 
 test('cryptoSign', async ({ is }) => {
-  const keypair = hypersign.keypair()
+  const keypair = bitsign.keypair()
   const { publicKey } = keypair
-  const salt = hypersign.salt()
+  const salt = bitsign.salt()
   const value = Buffer.from('test')
   is(
     verify(
-      hypersign.cryptoSign(hypersign.signable(value), keypair),
-      hypersign.signable(value),
+      bitsign.cryptoSign(bitsign.signable(value), keypair),
+      bitsign.signable(value),
       publicKey
     ),
     true
   )
   is(
     verify(
-      hypersign.cryptoSign(hypersign.signable(value, { salt }), keypair),
-      hypersign.signable(value, { salt }),
+      bitsign.cryptoSign(bitsign.signable(value, { salt }), keypair),
+      bitsign.signable(value, { salt }),
       publicKey
     ),
     true
   )
   is(
     verify(
-      hypersign.cryptoSign(hypersign.signable(value, { seq: 2 }), keypair),
-      hypersign.signable(value, { seq: 2 }),
+      bitsign.cryptoSign(bitsign.signable(value, { seq: 2 }), keypair),
+      bitsign.signable(value, { seq: 2 }),
       publicKey
     ),
     true

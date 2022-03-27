@@ -96,6 +96,6 @@ class Bitsign {
   }
 }
 
-module.exports = () => new Hypersign()
-module.exports.Hypersign = Hypersign
+module.exports = () => new Bitsign()
+module.exports.Bitsign = Bitsign
 module.exports.VALUE_MAX_SIZE = VALUE_MAX_SIZE
